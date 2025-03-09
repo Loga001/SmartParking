@@ -1,0 +1,92 @@
+/* General Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: #f0f2f5;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Header with Animated Gradient */
+header {
+    color: white;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    background: linear-gradient(270deg, #FF5733, #33FF57, #3357FF, #d12087);
+    background-size: 600% 600%;
+    animation: gradientAnimation 10s ease infinite;
+}
+
+/* Animation Keyframes */
+@keyframes gradientAnimation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Parking Slots Container */
+main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.parking-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+    max-width: 900px;
+    width: 100%;
+}
+
+/* Slot Cards */
+.slot-card {
+    position: relative;
+    padding: 20px;
+    height: 150px;
+    border-radius: 15px;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+/* Card Status Styles */
+.occupied {
+    background-color: #e74c3c; /* Red */
+}
+
+.available {
+    background-color: #2ecc71; /* Green */
+}
+
+/* Hover Effects */
+.slot-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Footer */
+footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 15px;
+    margin-top: auto;
+}
