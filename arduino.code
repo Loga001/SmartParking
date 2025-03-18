@@ -1,8 +1,14 @@
-#include <Wire.h> 
+#include <Wire.h>
 #include <ArduinoMqttClient.h>
 #include <LiquidCrystal_I2C.h>
 #include <Servo.h>
 #include "WiFiEsp.h"
+#include <FirebaseESP8266.h>
+#include <ArduinoJson.h>
+
+// Firebase Configuration
+#define FIREBASE_HOST "your-project-id.firebaseio.com"
+#define FIREBASE_AUTH "your-firebase-database-secret"
 
 // Emulate Serial1 on pins 6/7 if not present
 #ifndef HAVE_HWSERIAL1
@@ -10,20 +16,22 @@
 SoftwareSerial Serial1(2, 3); // RX, TX
 #endif
 
-LiquidCrystal_I2C lcd(0x27, 20, 4);  // set the LCD address to 0x27 for a 16 chars and 4-line display
+LiquidCrystal_I2C lcd(0x27, 20, 4);
+Servo myservo;
 
-Servo myservo;  // create servo object to control a servo
-
-char ssid[] = "RJ";            // your network SSID (name)
-char pass[] = "1234567898";        // your network password
-int status = WL_IDLE_STATUS;     // the Wifi radio's status
+// WiFi Credentials
+char ssid[] = "RJ";
+char pass[] = "1234567898";
+int status = WL_IDLE_STATUS;
 
 WiFiEspClient wifiClient;
+FirebaseData firebaseData;
 MqttClient mqttClient(wifiClient);
 
 const char broker[] = "broker.hivemq.com";
 int port = 1883;
 
+// MQTT Topics
 const char topic_1[] = "rj1";
 String message_1 = "EMPTY";
 const char topic_2[] = "rj2";
@@ -33,11 +41,8 @@ String message_3 = "EMPTY";
 const char topic_4[] = "rj4";
 String message_4 = "EMPTY";
 
-// Set interval for sending messages (milliseconds)
 const long interval = 1000;
 unsigned long previousMillis = 0;
-
-int count = 0;
 
 // Define IR sensor pins for 4 slots
 const int IR_PIN_1 = 4;
@@ -50,8 +55,7 @@ const int trigPin = 9;
 const int echoPin = 10;
 
 int distance;
-int pos = 0;  // variable to store the servo position
-
+int pos = 0;
 int IT_State_1, IT_State_2, IT_State_3, IT_State_4;
 String Parking_1, Parking_2, Parking_3, Parking_4;
 
@@ -65,128 +69,58 @@ void setup() {
 
   Serial.begin(9600);
   Serial1.begin(9600);
-
   lcd.init();
   lcd.backlight();
 
-  // Initialize ESP module
   WiFi.init(&Serial1);
-  
-  if (WiFi.status() == WL_NO_SHIELD) {
-    Serial.println("WiFi shield not present");
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("No Wifi shield");
-    lcd.setCursor(0, 1);
-    lcd.print("present");
-    delay(1000);
-    while (true);
-  }
-
   while (status != WL_CONNECTED) {
-    Serial.print("Attempting to connect to WPA SSID: ");
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Connecting WiFi...");
-    delay(1000);
     status = WiFi.begin(ssid, pass);
-  }
-
-  Serial.println("You're connected to the network");
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("You're connected");
-  lcd.setCursor(0, 1);
-  lcd.print("to network");
-  delay(1000);
-
-  Serial.print("Attempting to connect to the MQTT broker: ");
-  Serial.println(broker);
-
-  if (!mqttClient.connect(broker, port)) {
-    Serial.print("MQTT connection failed! Error code = ");
-    Serial.println(mqttClient.connectError());
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("MQTT connection");
-    lcd.setCursor(0, 1);
-    lcd.print("failed");
     delay(1000);
+  }
+  Serial.println("WiFi Connected!");
+
+  // Initialize Firebase
+  Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+  Firebase.reconnectWiFi(true);
+
+  // MQTT Connection
+  if (!mqttClient.connect(broker, port)) {
+    Serial.println("MQTT connection failed!");
     while (1);
   }
-
-  Serial.println("You're connected to the MQTT broker!");
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Connected to MQTT");
-  lcd.setCursor(0, 1);
-  lcd.print("Broker");
-  delay(1000);
+  Serial.println("Connected to MQTT!");
 
   myservo.attach(servo_pin);
 }
 
 void loop() {
   unsigned long currentMillis = millis();
-
   if (currentMillis - previousMillis >= interval) {
     mqttClient.poll();
     previousMillis = currentMillis;
-    
+
     distance = ultra();
     if ((distance < 10) && ((Parking_1 == "EMPTY") || (Parking_2 == "EMPTY") || (Parking_3 == "EMPTY") || (Parking_4 == "EMPTY"))) {
       controlServo();
     }
 
     updateParkingSlotStatus();
-    
-    // Publish MQTT messages for all 4 slots only if the state changes
-    if (message_1 != Parking_1) {
-      mqttClient.beginMessage(topic_1);
-      mqttClient.print(Parking_1);
-      mqttClient.endMessage();
-      message_1 = Parking_1;
-    }
+    updateFirebase();  // NEW FUNCTION TO UPDATE FIREBASE
 
-    if (message_2 != Parking_2) {
-      mqttClient.beginMessage(topic_2);
-      mqttClient.print(Parking_2);
-      mqttClient.endMessage();
-      message_2 = Parking_2;
-    }
-
-    if (message_3 != Parking_3) {
-      mqttClient.beginMessage(topic_3);
-      mqttClient.print(Parking_3);
-      mqttClient.endMessage();
-      message_3 = Parking_3;
-    }
-
-    if (message_4 != Parking_4) {
-      mqttClient.beginMessage(topic_4);
-      mqttClient.print(Parking_4);
-      mqttClient.endMessage();
-      message_4 = Parking_4;
-    }
-
+    publishMQTT();
     displayStatusOnLCD();
-    delay(200);
   }
 }
 
-void controlServo() {
-  myservo.attach(servo_pin);
-  for (pos = 5; pos <= 160; pos++) {
-    myservo.write(pos);
-    delay(15);
-  }
-  for (pos = 160; pos >= 5; pos--) {
-    myservo.write(pos);
-    delay(15);
-  }
-  myservo.detach();
+// Function to update Firebase Realtime Database
+void updateFirebase() {
+  Firebase.setString(firebaseData, "/parking/slot1", Parking_1);
+  Firebase.setString(firebaseData, "/parking/slot2", Parking_2);
+  Firebase.setString(firebaseData, "/parking/slot3", Parking_3);
+  Firebase.setString(firebaseData, "/parking/slot4", Parking_4);
 }
 
+// Function to update Parking Slot Status
 void updateParkingSlotStatus() {
   IT_State_1 = digitalRead(IR_PIN_1);
   Parking_1 = (IT_State_1 == LOW) ? "FULL" : "EMPTY";
@@ -201,6 +135,38 @@ void updateParkingSlotStatus() {
   Parking_4 = (IT_State_4 == LOW) ? "FULL" : "EMPTY";
 }
 
+// Function to Publish Data to MQTT
+void publishMQTT() {
+  if (message_1 != Parking_1) {
+    mqttClient.beginMessage(topic_1);
+    mqttClient.print(Parking_1);
+    mqttClient.endMessage();
+    message_1 = Parking_1;
+  }
+
+  if (message_2 != Parking_2) {
+    mqttClient.beginMessage(topic_2);
+    mqttClient.print(Parking_2);
+    mqttClient.endMessage();
+    message_2 = Parking_2;
+  }
+
+  if (message_3 != Parking_3) {
+    mqttClient.beginMessage(topic_3);
+    mqttClient.print(Parking_3);
+    mqttClient.endMessage();
+    message_3 = Parking_3;
+  }
+
+  if (message_4 != Parking_4) {
+    mqttClient.beginMessage(topic_4);
+    mqttClient.print(Parking_4);
+    mqttClient.endMessage();
+    message_4 = Parking_4;
+  }
+}
+
+// Function to Display Status on LCD
 void displayStatusOnLCD() {
   lcd.clear();
   lcd.setCursor(0, 0);
@@ -214,26 +180,28 @@ void displayStatusOnLCD() {
   delay(1000);
 }
 
-int ultra() {
-  int result = 0;
-  unsigned long kesto = 0;
-  unsigned long matka = 0;
-
-  for (int i = 0; i < 3; i++) {
-    digitalWrite(trigPin, LOW);
-    delayMicroseconds(2);
-    digitalWrite(trigPin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(trigPin, LOW);
-    delayMicroseconds(1);
-
-    kesto = pulseIn(echoPin, HIGH);
-    matka = matka + (kesto / 58.2);
-    delay(10);
+// Function to Control Servo for Gate
+void controlServo() {
+  myservo.attach(servo_pin);
+  for (pos = 5; pos <= 160; pos++) {
+    myservo.write(pos);
+    delay(15);
   }
-  matka /= 3;
-  delay(10);
+  for (pos = 160; pos >= 5; pos--) {
+    myservo.write(pos);
+    delay(15);
+  }
+  myservo.detach();
+}
 
-  result = matka;
-  return result;
+// Function to Read Distance from Ultrasonic Sensor
+int ultra() {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  
+  long duration = pulseIn(echoPin, HIGH);
+  return duration * 0.034 / 2;
 }
