@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="signup.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="header">Smart Parking System</h1>
+
+        <form id="signup-form" class="form">
+            <h2>Sign Up</h2>
+            <div class="input-group">
+                <input type="email" id="signup-email" required>
+                <label>Email</label>
+            </div>
+            <div class="input-group">
+                <input type="password" id="signup-password" required>
+                <label>Password</label>
+            </div>
+            <button type="submit" class="btn">Sign Up</button>
+            <p>Already have an account? <a href="login.html">Log in</a></p>
+        </form>
+    </div>
+
+    <script type="module">
+        import { auth, createUserWithEmailAndPassword } from "./firebase-config.js";
+
+        document.getElementById("signup-form").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const email = document.getElementById("signup-email").value;
+            const password = document.getElementById("signup-password").value;
+
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    alert("Sign-up successful! You can now log in.");
+                    window.location.href = "login.html"; // Redirect to login
+                })
+                .catch((error) => {
+                    alert(error.message);
+                });
+        });
+    </script>
+</body>
+</html>
