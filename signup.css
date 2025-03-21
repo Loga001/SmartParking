@@ -1,0 +1,163 @@
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+    /* Smart Parking System Header */
+    .header {
+        font-size: 2rem;
+        font-weight: bold;
+        text-align: center;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 20px;
+        animation: glow 1.5s infinite alternate, bounce 2s infinite ease-in-out;
+    }
+
+    /* Glowing Text Animation */
+    @keyframes glow {
+        0% {
+            text-shadow: 0 0 5px #00ffcc, 0 0 10px #00ffcc, 0 0 15px #00ffcc;
+        }
+        100% {
+            text-shadow: 0 0 10px #ffcc00, 0 0 20px #ffcc00, 0 0 30px #ffcc00;
+        }
+    }
+
+    /* Bouncing Effect */
+    @keyframes bounce {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-5px);
+        }
+    }
+
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: linear-gradient(135deg, #1f4037, #99f2c8);
+        overflow: hidden;
+    }
+
+    /* Form Container */
+    .container {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        animation: fadeIn 1s ease-in-out;
+    }
+
+    h2 {
+        color: white;
+        margin-bottom: 1rem;
+    }
+
+    /* Input Group */
+    .input-group {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .input-group input {
+        width: 100%;
+        padding: 10px;
+        background: transparent;
+        border: 2px solid white;
+        border-radius: 5px;
+        color: white;
+        outline: none;
+        transition: all 0.3s ease;
+    }
+
+    .input-group label {
+        position: absolute;
+        top: 50%;
+        left: 10px;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.7);
+        transition: all 0.3s ease;
+        pointer-events: none;
+    }
+
+    /* Floating Labels */
+    .input-group input:focus ~ label,
+    .input-group input:valid ~ label {
+        top: 0;
+        left: 10px;
+        font-size: 12px;
+        color: #00ffcc;
+    }
+
+    /* Button Styling */
+    .btn {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background: #00ffcc;
+        color: #1f4037;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease-in-out;
+        animation: pulse 2s infinite;
+    }
+
+    .btn:hover {
+        background: #1f4037;
+        color: #00ffcc;
+        transform: scale(1.05);
+    }
+
+    /* Links */
+    p {
+        margin-top: 1rem;
+        color: white;
+    }
+
+    p a {
+        color: #00ffcc;
+        text-decoration: none;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+
+    p a:hover {
+        text-decoration: underline;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+        }
+        50% {
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.8);
+        }
+        100% {
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+        }
+    }
