@@ -6,17 +6,10 @@
     <title>Smart Parking System</title>
 
     <!-- Firebase SDKs -->
-   <!-- Firebase SDKs first -->
     <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js"></script>
-    
-
 
     <link rel="stylesheet" href="sps.css">
-
-    
-
-   
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
@@ -28,63 +21,60 @@
 
     <main>
         <div class="parking-container">
-            <div id="slot1" class="slot-card">Slot-1</div>
-            <div id="slot2" class="slot-card">Slot-2</div>
-            <div id="slot3" class="slot-card">Slot-3</div>
-            <div id="slot4" class="slot-card">Slot-4</div>
+            <div id="slot1" class="slot-card">Slot 1</div>
+            <div id="slot2" class="slot-card">Slot 2</div>
         </div>
     </main>
-    
 
     <footer>
         &copy; 2025 Smart Parking System. All Rights Reserved.
     </footer>
 
     <script type="module">
-        //   Import Firebase modules
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
 
-// Firebase configuration (Replace with your actual Firebase config)    
-const firebaseConfig = {
-    apiKey: "AIzaSyCZNLSIuRU4GOmrJ59_FIUelsblhAAqh_s",
-    authDomain: "iot-based-smart-parking-be092.firebaseapp.com",
-    databaseURL: "https://iot-based-smart-parking-be092-default-rtdb.firebaseio.com",
-    projectId: "iot-based-smart-parking-be092",
-    storageBucket: "iot-based-smart-parking-be092.firebasestorage.app",
-    messagingSenderId: "271639620448",
-    appId: "1:271639620448:web:57b05b5d5b0f990ffa0c05",
-    measurementId: "G-FJYK9HVEX4"
-  };
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+        // Firebase configuration (Replace with your actual Firebase config)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZNLSIuRU4GOmrJ59_FIUelsblhAAqh_s",
+            authDomain: "iot-based-smart-parking-be092.firebaseapp.com",
+            databaseURL: "https://iot-based-smart-parking-be092-default-rtdb.firebaseio.com",
+            projectId: "iot-based-smart-parking-be092",
+            storageBucket: "iot-based-smart-parking-be092.appspot.com",
+            messagingSenderId: "271639620448",
+            appId: "1:271639620448:web:57b05b5d5b0f990ffa0c05",
+            measurementId: "G-FJYK9HVEX4"
+        };
 
-// Function to update slot statuses dynamically
-function updateSlots(data) {
-    for (const slot in data) {
-        const element = document.getElementById(slot);
-        if (element) {
-            if (data[slot]) {
-                element.className = "slot-card occupied";
-                element.textContent = `${slot.toUpperCase()} (Occupied)`;
-            } else {
-                element.className = "slot-card available";
-                element.textContent = `${slot.toUpperCase()} (Available)`;
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Function to update slots dynamically
+        function updateSlot(slotId, status) {
+            const element = document.getElementById(slotId);
+            if (element) {
+                if (status === "FULL") {
+                    element.className = "slot-card occupied";
+                    element.textContent = `${slotId.toUpperCase()} (Occupied)`;
+                } else {
+                    element.className = "slot-card available";
+                    element.textContent = `${slotId.toUpperCase()} (Available)`;
+                }
             }
         }
-    }
-}
 
-// Fetch real-time data from Firebase
-const parkingRef = ref(db, 'parking');
-onValue(parkingRef, (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-        updateSlots(data);
-    }
-});
-
+        // Fetch real-time data from Firebase
+        const parkingRef = ref(db, "parking");
+        onValue(parkingRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                updateSlot("slot1", data.slot1);
+                updateSlot("slot2", data.slot2);
+            }
+        });
     </script>
-</body>
+
+
 </html>
